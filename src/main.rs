@@ -85,36 +85,59 @@ mod tests {
     #[test]
     fn all_engines_render_tmux_output() {
         use super::*;
-        let bytes = include_bytes!("../fixtures/tmux-redraw.bin");
-        let marker = "38";
+        let bytes = workloads().pop().unwrap().1;
+        let expected: Vec<String> = std::iter::once("frame 0150".to_string())
+            .chain((1..=38).map(|n| n.to_string()))
+            .collect();
+        let normalize = |rows: Vec<String>| -> Vec<String> {
+            let mut rows: Vec<_> = rows
+                .into_iter()
+                .map(|row| row.trim_end().to_string())
+                .collect();
+            while rows.last().is_some_and(String::is_empty) {
+                rows.pop();
+            }
+            rows
+        };
 
         let mut alacritty = Term::new(Config::default(), &TermSize::new(COLS, ROWS), VoidListener);
         let mut parser: Processor = Processor::new();
-        parser.advance(&mut alacritty, bytes);
+        for chunk in bytes.chunks(8192) {
+            parser.advance(&mut alacritty, chunk);
+        }
         use alacritty_terminal::index::Line;
-        let alacritty_text: String = (0..ROWS)
-            .flat_map(|row| {
-                (&alacritty.grid()[Line(row as i32)])
-                    .into_iter()
-                    .map(|cell| cell.c)
-            })
-            .collect();
-        assert!(
-            alacritty_text.contains(marker),
-            "alacritty viewport missing {marker}"
+        let alacritty_rows = normalize(
+            (0..ROWS)
+                .map(|row| {
+                    (&alacritty.grid()[Line(row as i32)])
+                        .into_iter()
+                        .map(|cell| cell.c)
+                        .collect()
+                })
+                .collect(),
         );
+        assert_eq!(alacritty_rows, expected, "alacritty viewport");
 
         let mut ghostty = ghostty_vt::Terminal::new(COLS as u16, ROWS as u16).unwrap();
-        ghostty.feed(bytes).unwrap();
-        let ghostty_text = ghostty.dump_viewport().unwrap();
-        assert!(
-            ghostty_text.contains("frame 0150"),
-            "ghostty viewport missing final frame"
+        for chunk in bytes.chunks(8192) {
+            ghostty.feed(chunk).unwrap();
+        }
+        let ghostty_rows = normalize(
+            ghostty
+                .dump_viewport()
+                .unwrap()
+                .lines()
+                .map(str::to_string)
+                .collect(),
         );
+        assert_eq!(ghostty_rows, expected, "ghostty viewport");
 
         let mut vt100 = vt100::Parser::new(ROWS as u16, COLS as u16, 1000);
-        vt100.process(bytes);
-        assert!(vt100.screen().contents().contains(marker));
+        for chunk in bytes.chunks(8192) {
+            vt100.process(chunk);
+        }
+        let vt100_rows = normalize(vt100.screen().rows(0, COLS as u16).collect());
+        assert_eq!(vt100_rows, expected, "vt100 viewport");
 
         let size = TerminalSize {
             rows: ROWS,
@@ -130,9 +153,18 @@ mod tests {
             "0",
             Box::new(std::io::sink()),
         );
-        wezterm.advance_bytes(bytes);
-        let rows = wezterm.screen().lines_in_phys_range(0..ROWS);
-        assert!(rows.iter().any(|row| row.as_str().contains(marker)));
+        for chunk in bytes.chunks(8192) {
+            wezterm.advance_bytes(chunk);
+        }
+        let wezterm_rows = normalize(
+            wezterm
+                .screen()
+                .lines_in_phys_range(0..ROWS)
+                .iter()
+                .map(|row| row.as_str().to_string())
+                .collect(),
+        );
+        assert_eq!(wezterm_rows, expected, "wezterm viewport");
     }
 }
 

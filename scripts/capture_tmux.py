@@ -4,7 +4,6 @@ import fcntl
 import os
 import pty
 import select
-import signal
 import struct
 import subprocess
 import termios
@@ -32,7 +31,7 @@ data = bytearray()
 try:
     # Allow server startup, send a series of full-pane repaints, and drain the PTY.
     time.sleep(0.5)
-    command = "for i in $(seq 1 150); do printf '\\033[H\\033[2Jframe %04d\\n' \"$i\"; seq 1 38; sleep 0.005; done"
+    command = "for i in $(seq 1 150); do printf '\\033[H\\033[2Jframe %04d\\n' \"$i\"; seq 1 38; sleep 0.005; done; sleep 12"
     subprocess.run([tmux, "-L", name, "send-keys", "-t", "bench", "-l", command], check=True)
     subprocess.run([tmux, "-L", name, "send-keys", "-t", "bench", "Enter"], check=True)
     end = time.monotonic() + 8
@@ -48,7 +47,8 @@ try:
     print(f"Captured {len(data)} bytes to {out}")
 finally:
     subprocess.run([tmux, "-L", name, "kill-server"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    os.killpg(client.pid, signal.SIGTERM)
+    if client.poll() is None:
+        client.terminate()
     client.wait(timeout=5)
     os.close(master)
     os.unlink(config.name)
