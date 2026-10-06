@@ -1,0 +1,6 @@
+/target/
+/.context/
+
+**/.zig-cache/
+**/target/
+/crates/ghostty_vt/Cargo.lock

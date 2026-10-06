@@ -1,0 +1,12 @@
+[package]
+name = "vt-engine-bench"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+alacritty_terminal = { path = "engines/alacritty/alacritty_terminal", default-features = false }
+vt100 = { path = "engines/vt100" }
+vte = { path = "engines/vte" }
+wezterm-term = { path = "engines/wezterm/term" }
+
+ghostty_vt = { path = "crates/ghostty_vt" }

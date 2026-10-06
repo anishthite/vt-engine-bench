@@ -1,0 +1,15 @@
+[submodule "engines/alacritty"]
+	path = engines/alacritty
+	url = https://github.com/alacritty/alacritty.git
+[submodule "engines/wezterm"]
+	path = engines/wezterm
+	url = https://github.com/wezterm/wezterm.git
+[submodule "engines/ghostty"]
+	path = engines/ghostty
+	url = https://github.com/ghostty-org/ghostty.git
+[submodule "engines/vt100"]
+	path = engines/vt100
+	url = https://github.com/doy/vt100-rust.git
+[submodule "engines/vte"]
+	path = engines/vte
+	url = https://github.com/alacritty/vte.git
