@@ -1,6 +1,6 @@
 # VT engine benchmark (macOS)
 
-Headless **parsing + screen-state update**, not terminal-rendering speed. Sources are pinned as git submodules (see `git submodule status` and `Cargo.lock`). Ghostty is pinned to current `main` at [`b699ea7`](https://github.com/ghostty-org/ghostty/commit/b699ea79f4b881421b4b3055abc16a0957d76beb) (1.3.2-dev). Its benchmark-only C shim is compiled against that checkout's headers and links the matching `libghostty-vt` archive; `libghostty-rs` supplies the Zig build integration, **not** its older Rust API. The other engines are pinned source checkouts. `vte` has **no screen model** and is included as an explicitly incomparable parser-only baseline.
+Headless **parsing + screen-state update**, not terminal-rendering speed. Sources are pinned as git submodules (see `git submodule status` and `Cargo.lock`). Ghostty is pinned to current `main` at [`b699ea7`](https://github.com/ghostty-org/ghostty/commit/b699ea79f4b881421b4b3055abc16a0957d76beb) (1.3.2-dev). Its benchmark-only C shim is compiled against that checkout's headers and links the matching `libghostty-vt` archive; `libghostty-rs` supplies the Zig build integration, **not** its older Rust API. The other engines are pinned source checkouts. Parser-only `vte` is excluded because it has no screen state.
 
 ```sh
 git submodule update --init --recursive
@@ -29,13 +29,23 @@ Only the **specific fixtures** pass; this is not a complete VT conformance suite
 
 ## Recorded run (Apple M1 Pro, macOS 15.4.1, release build, 2026-10-06)
 
-| Workload | alacritty_terminal | Ghostty main | vt100 | wezterm-term | vte parser-only |
-|---|---:|---:|---:|---:|---:|
-| plain scroll, ms | 5.98 | **1.34** | 7.93 | 26.24 | 0.74 |
-| ANSI scroll, ms | **4.67** | 6.18 | 6.06 | 14.64 | 1.30 |
-| TUI redraw, ms | 3.56 | **2.66** | 3.51 | 25.17 | 0.93 |
-| tmux client (repeated recording), ms | **2.14** | 6.02 | 8.54 | 138.26 | 0.34 |
+| Workload | alacritty_terminal | Ghostty main | vt100 | wezterm-term |
+|---|---:|---:|---:|---:|
+| plain scroll, ms | 5.98 | **1.34** | 7.93 | 26.24 |
+| ANSI scroll, ms | **4.67** | 6.18 | 6.06 | 14.64 |
+| TUI redraw, ms | 3.56 | **2.66** | 3.51 | 25.17 |
+| tmux client (repeated recording), ms | **2.14** | 6.02 | 8.54 | 138.26 |
 
 [Raw per-run medians](results/2026-10-06-m1-pro-current-ghostty.csv) are included. Values are the **median of three independent process runs**, each reporting the median of seven iterations. This is not a controlled system-wide benchmark. [Previous runs](results/2026-10-06-m1-pro.csv) used Ghostty 1.2.3 and Alacritty's 10k-line default scrollback; **do not compare them directly** to these 1k-line results.
 
-**Do not select a GPUI terminal core on these numbers alone.** All four pass the bounded core fixtures; none is proven the fastest rendered terminal. The next meaningful decision requires broader compatibility checks and actual GPUI rendering/frame-pacing measurements. Ghostty leads plain output and synthetic TUI redraws; Alacritty leads this recorded tmux stream and ANSI output. Neither lead establishes the fastest finished terminal.
+**Do not select a GPUI terminal core on these numbers alone.** All four pass the bounded core fixtures; none is proven the fastest rendered terminal. Ghostty leads plain output and synthetic TUI redraws; Alacritty leads this recorded tmux stream and ANSI output.
+
+## GPUI display and input (not measured)
+
+| Metric | Comparable result |
+|---|---|
+| GPUI rendering / presented frames | Not measured |
+| Frame pacing (presented-frame intervals) | Not measured |
+| Input-to-screen latency | Not measured |
+
+A GPUI `on_next_frame` callback runs **before** draw/present; it cannot report any of these metrics. A local GUI prototype also failed to produce distinct active frames from this agent's shell session, so its queued callback timings were discarded. These require a working foreground window and a presentation or pixel-observation instrument; keyboard-to-pixel latency additionally needs input event timestamps. The headless figures above cannot substitute for them.

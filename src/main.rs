@@ -12,8 +12,6 @@ use alacritty_terminal::vte::ansi::Processor;
 use wezterm_term::{Terminal as WezTerm, TerminalConfiguration, TerminalSize};
 #[derive(Debug)]
 struct BenchConfig;
-struct Noop;
-impl vte::Perform for Noop {}
 impl TerminalConfiguration for BenchConfig {
     fn scrollback_size(&self) -> usize {
         1000
@@ -220,15 +218,6 @@ fn main() {
                 term.advance_bytes(chunk);
             }
             black_box(term);
-        });
-        // Parser-only baseline: no grid or screen state; never rank against engines.
-        time("vte (parser only)", label, &bytes, |bytes| {
-            let mut parser = vte::Parser::new();
-            let mut sink = Noop;
-            for chunk in bytes.chunks(8192) {
-                parser.advance(&mut sink, chunk);
-            }
-            black_box(parser);
         });
     }
 }

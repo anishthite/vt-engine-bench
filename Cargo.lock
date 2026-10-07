@@ -42,7 +42,7 @@ dependencies = [
  "rustix-openpty",
  "signal-hook 0.4.5",
  "unicode-width",
- "vte 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "vte",
  "windows-sys 0.59.0",
 ]
 
@@ -2033,7 +2033,6 @@ dependencies = [
  "alacritty_terminal",
  "current-ghostty",
  "vt100",
- "vte 0.15.0",
  "wezterm-cell",
  "wezterm-term",
 ]
@@ -2044,15 +2043,7 @@ version = "0.16.2"
 dependencies = [
  "itoa",
  "unicode-width",
- "vte 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "vte"
-version = "0.15.0"
-dependencies = [
- "arrayvec",
- "memchr",
+ "vte",
 ]
 
 [[package]]
