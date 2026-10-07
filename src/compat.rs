@@ -3,12 +3,13 @@ use super::*;
 use alacritty_terminal::grid::Dimensions;
 use alacritty_terminal::index::{Column, Line};
 use alacritty_terminal::vte::ansi::{Color as AlColor, Rgb as AlRgb};
+use ghostty_vt::Terminal as GhosttyTerminal;
 use wezterm_cell::color::ColorAttribute;
 
 struct Engines {
     alacritty: Term<VoidListener>,
     parser: Processor,
-    ghostty: ghostty_vt::Terminal,
+    ghostty: GhosttyTerminal,
     vt100: vt100::Parser,
     wezterm: WezTerm,
 }
@@ -22,10 +23,11 @@ impl Engines {
             pixel_height: rows * 16,
             dpi: 96,
         };
+        let ghostty = GhosttyTerminal::new(cols as u16, rows as u16);
         Self {
-            alacritty: Term::new(Config::default(), &TermSize::new(cols, rows), VoidListener),
+            alacritty: Term::new(alacritty_config(), &TermSize::new(cols, rows), VoidListener),
             parser: Processor::new(),
-            ghostty: ghostty_vt::Terminal::new(cols as u16, rows as u16).unwrap(),
+            ghostty,
             vt100: vt100::Parser::new(rows as u16, cols as u16, 1000),
             wezterm: WezTerm::new(
                 size,
@@ -41,7 +43,7 @@ impl Engines {
         // Split inside escape sequences and UTF-8 characters as a real PTY may do.
         for chunk in bytes.chunks(7) {
             self.parser.advance(&mut self.alacritty, chunk);
-            self.ghostty.feed(chunk).unwrap();
+            self.ghostty.feed(chunk);
             self.vt100.process(chunk);
             self.wezterm.advance_bytes(chunk);
         }
@@ -67,9 +69,7 @@ impl Engines {
                     .collect()
             })
             .collect();
-        let ghostty: Vec<String> = (0..rows)
-            .map(|y| self.ghostty.dump_viewport_row(y as u16).unwrap())
-            .collect();
+        let ghostty = self.ghostty.snapshot().0;
         let vt100 = self.vt100.screen().rows(0, cols as u16).collect();
         let wezterm = self
             .wezterm
@@ -87,7 +87,7 @@ impl Engines {
 
     fn resize(&mut self, cols: usize, rows: usize) {
         self.alacritty.resize(TermSize::new(cols, rows));
-        self.ghostty.resize(cols as u16, rows as u16).unwrap();
+        self.ghostty.resize(cols as u16, rows as u16);
         self.vt100.screen_mut().set_size(rows as u16, cols as u16);
         self.wezterm.resize(TerminalSize {
             rows,
@@ -108,7 +108,7 @@ fn cursor_and_clear() {
     }
     let a = engines.alacritty.grid().cursor.point;
     assert_eq!((a.column.0, a.line.0), (1, 2));
-    assert_eq!(engines.ghostty.cursor_position(), Some((2, 3)));
+    assert_eq!(engines.ghostty.cursor(), (1, 2));
     assert_eq!(engines.vt100.screen().cursor_position(), (2, 1));
     let w = engines.wezterm.cursor_pos();
     assert_eq!((w.x, w.y), (1, 2));
@@ -138,10 +138,13 @@ fn truecolor_and_bold() {
     assert!(a
         .flags
         .contains(alacritty_terminal::term::cell::Flags::BOLD));
-    let g = engines.ghostty.dump_viewport_row_cell_styles(0).unwrap()[0];
-    assert_eq!((g.fg.r, g.fg.g, g.fg.b), (17, 34, 51));
-    assert_eq!((g.bg.r, g.bg.g, g.bg.b), (68, 85, 102));
-    assert_ne!(g.flags & 0x02, 0, "ghostty bold");
+    let (_, fg, bg) = engines.ghostty.snapshot();
+    assert_eq!(fg.valid, 1);
+    assert_eq!(bg.valid, 1);
+    let bold = fg.bold != 0;
+    assert_eq!((fg.r, fg.g, fg.b), (17, 34, 51));
+    assert_eq!((bg.r, bg.g, bg.b), (68, 85, 102));
+    assert!(bold, "ghostty bold");
     let v = engines.vt100.screen().cell(0, 0).unwrap();
     assert_eq!(v.fgcolor(), vt100::Color::Rgb(17, 34, 51));
     assert_eq!(v.bgcolor(), vt100::Color::Rgb(68, 85, 102));
@@ -172,8 +175,9 @@ fn indexed_color_and_alternate_screen() {
     engines.feed(b"NORMAL\x1b[?1049h\x1b[H\x1b[38;5;196mR");
     let a = &engines.alacritty.grid()[Line(0)][Column(0)];
     assert_eq!(a.fg, AlColor::Indexed(196));
-    let g = engines.ghostty.dump_viewport_row_cell_styles(0).unwrap()[0];
-    assert_eq!((g.fg.r, g.fg.g, g.fg.b), (255, 0, 0));
+    let fg = engines.ghostty.snapshot().1;
+    assert_eq!(fg.valid, 1);
+    assert_eq!((fg.r, fg.g, fg.b), (255, 0, 0));
     assert_eq!(
         engines.vt100.screen().cell(0, 0).unwrap().fgcolor(),
         vt100::Color::Idx(196)
@@ -240,8 +244,8 @@ fn scrollback_retains_earliest_line() {
         oldest[0].as_str()
     );
     // vt100::scrollback reports the current view offset, not retained history.
-    engines.ghostty.scroll_viewport_top().unwrap();
-    assert!(engines.ghostty.dump_viewport().unwrap().contains("FIRST"));
+    engines.ghostty.scroll_top();
+    assert!(engines.ghostty.snapshot().0.join("\n").contains("FIRST"));
     engines.vt100.screen_mut().set_scrollback(2);
     assert!(engines.vt100.screen().contents().contains("FIRST"));
 }

@@ -13,3 +13,6 @@
 [submodule "engines/vte"]
 	path = engines/vte
 	url = https://github.com/alacritty/vte.git
+[submodule "engines/libghostty-rs"]
+	path = engines/libghostty-rs
+	url = https://github.com/Uzaaft/libghostty-rs.git

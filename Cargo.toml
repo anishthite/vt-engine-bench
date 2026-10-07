@@ -10,4 +10,4 @@ vte = { path = "engines/vte" }
 wezterm-term = { path = "engines/wezterm/term" }
 wezterm-cell = { path = "engines/wezterm/wezterm-cell" }
 
-ghostty_vt = { path = "crates/ghostty_vt" }
+ghostty_vt = { package = "current-ghostty", path = "crates/current-ghostty" }

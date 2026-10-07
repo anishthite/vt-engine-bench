@@ -356,6 +356,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "current-ghostty"
+version = "0.1.0"
+dependencies = [
+ "cc",
+ "libghostty-vt-sys",
+]
+
+[[package]]
 name = "cursor-icon"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -614,17 +622,6 @@ dependencies = [
  "libc",
  "r-efi 6.0.0",
 ]
-
-[[package]]
-name = "ghostty_vt"
-version = "0.1.0"
-dependencies = [
- "ghostty_vt_sys",
-]
-
-[[package]]
-name = "ghostty_vt_sys"
-version = "0.1.0"
 
 [[package]]
 name = "gif"
@@ -912,6 +909,10 @@ dependencies = [
  "arbitrary",
  "cc",
 ]
+
+[[package]]
+name = "libghostty-vt-sys"
+version = "0.2.1"
 
 [[package]]
 name = "libm"
@@ -2030,7 +2031,7 @@ name = "vt-engine-bench"
 version = "0.1.0"
 dependencies = [
  "alacritty_terminal",
- "ghostty_vt",
+ "current-ghostty",
  "vt100",
  "vte 0.15.0",
  "wezterm-cell",

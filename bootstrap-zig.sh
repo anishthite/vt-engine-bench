@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT_DIR="${ROOT_DIR}/.context/zig"
-VERSION="0.14.1"
+VERSION="0.16.0"
 
 mkdir -p "${OUT_DIR}"
 
@@ -18,11 +18,11 @@ fi
 case "${arch}" in
   x86_64)
     tarball="zig-x86_64-macos-${VERSION}.tar.xz"
-    shasum="b0f8bdfb9035783db58dd6c19d7dea89892acc3814421853e5752fe4573e5f43"
+    shasum="0387557ed1877bc6a2e1802c8391953baddba76081876301c522f52977b52ba7"
     ;;
   arm64)
     tarball="zig-aarch64-macos-${VERSION}.tar.xz"
-    shasum="39f3dc5e79c22088ce878edc821dedb4ca5a1cd9f5ef915e9b3cc3053e8faefa"
+    shasum="b23d70deaa879b5c2d486ed3316f7eaa53e84acf6fc9cc747de152450d401489"
     ;;
   *)
     echo "Unsupported arch: ${arch}" >&2

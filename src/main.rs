@@ -27,6 +27,13 @@ const COLS: usize = 120;
 const ROWS: usize = 40;
 const ROUNDS: usize = 7;
 
+fn alacritty_config() -> Config {
+    Config {
+        scrolling_history: 1000,
+        ..Config::default()
+    }
+}
+
 fn workloads() -> Vec<(&'static str, Vec<u8>)> {
     let mut plain = Vec::new();
     let mut styled = Vec::new();
@@ -104,7 +111,7 @@ mod tests {
             rows
         };
 
-        let mut alacritty = Term::new(Config::default(), &TermSize::new(COLS, ROWS), VoidListener);
+        let mut alacritty = Term::new(alacritty_config(), &TermSize::new(COLS, ROWS), VoidListener);
         let mut parser: Processor = Processor::new();
         for chunk in bytes.chunks(8192) {
             parser.advance(&mut alacritty, chunk);
@@ -122,18 +129,11 @@ mod tests {
         );
         assert_eq!(alacritty_rows, expected, "alacritty viewport");
 
-        let mut ghostty = ghostty_vt::Terminal::new(COLS as u16, ROWS as u16).unwrap();
+        let mut ghostty = ghostty_vt::Terminal::new(COLS as u16, ROWS as u16);
         for chunk in bytes.chunks(8192) {
-            ghostty.feed(chunk).unwrap();
+            ghostty.feed(chunk);
         }
-        let ghostty_rows = normalize(
-            ghostty
-                .dump_viewport()
-                .unwrap()
-                .lines()
-                .map(str::to_string)
-                .collect(),
-        );
+        let ghostty_rows = normalize(ghostty.snapshot().0);
         assert_eq!(ghostty_rows, expected, "ghostty viewport");
 
         let mut vt100 = vt100::Parser::new(ROWS as u16, COLS as u16, 1000);
@@ -180,17 +180,17 @@ fn main() {
     for (label, bytes) in workloads() {
         println!("{} bytes: {}", label, bytes.len());
         time("alacritty_terminal", label, &bytes, |bytes| {
-            let mut term = Term::new(Config::default(), &TermSize::new(COLS, ROWS), VoidListener);
+            let mut term = Term::new(alacritty_config(), &TermSize::new(COLS, ROWS), VoidListener);
             let mut parser: Processor = Processor::new();
             for chunk in bytes.chunks(8192) {
                 parser.advance(&mut term, chunk);
             }
             black_box(term);
         });
-        time("ghostty-vt-1.2.3", label, &bytes, |bytes| {
-            let mut term = ghostty_vt::Terminal::new(COLS as u16, ROWS as u16).unwrap();
+        time("ghostty-vt-main", label, &bytes, |bytes| {
+            let mut term = ghostty_vt::Terminal::new(COLS as u16, ROWS as u16);
             for chunk in bytes.chunks(8192) {
-                term.feed(chunk).unwrap();
+                term.feed(chunk);
             }
             black_box(term);
         });

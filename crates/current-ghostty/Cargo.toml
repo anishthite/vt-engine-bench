@@ -1,0 +1,11 @@
+[package]
+name = "current-ghostty"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+libghostty-vt-sys = { path = "../../engines/libghostty-rs/crates/libghostty-vt-sys" }
+
+[build-dependencies]
+cc = "1"
