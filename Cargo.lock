@@ -2033,6 +2033,7 @@ dependencies = [
  "ghostty_vt",
  "vt100",
  "vte 0.15.0",
+ "wezterm-cell",
  "wezterm-term",
 ]
 

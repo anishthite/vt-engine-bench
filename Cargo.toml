@@ -8,5 +8,6 @@ alacritty_terminal = { path = "engines/alacritty/alacritty_terminal", default-fe
 vt100 = { path = "engines/vt100" }
 vte = { path = "engines/vte" }
 wezterm-term = { path = "engines/wezterm/term" }
+wezterm-cell = { path = "engines/wezterm/wezterm-cell" }
 
 ghostty_vt = { path = "crates/ghostty_vt" }

@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod compat;
+
 use std::hint::black_box;
 use std::sync::Arc;
 use std::time::Instant;
@@ -71,6 +74,7 @@ fn time(name: &str, workload: &str, bytes: &[u8], mut run: impl FnMut(&[u8])) {
 }
 
 #[cfg(test)]
+#[allow(clippy::items_after_test_module)]
 mod tests {
     #[test]
     fn workloads_cover_scroll_color_and_cursor_redraw() {

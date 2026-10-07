@@ -1,0 +1,61 @@
+run,workload,engine,median_ms
+1,plain-scroll,alacritty_terminal,19.63
+1,plain-scroll,ghostty-vt-1.2.3,13.72
+1,plain-scroll,vt100,9.45
+1,plain-scroll,wezterm-term,34.98
+1,plain-scroll,vte (parser only),1.24
+1,ansi-scroll,alacritty_terminal,14.21
+1,ansi-scroll,ghostty-vt-1.2.3,21.89
+1,ansi-scroll,vt100,8.22
+1,ansi-scroll,wezterm-term,16.19
+1,ansi-scroll,vte (parser only),1.30
+1,tui-redraw,alacritty_terminal,3.94
+1,tui-redraw,ghostty-vt-1.2.3,5.12
+1,tui-redraw,vt100,3.50
+1,tui-redraw,wezterm-term,26.52
+1,tui-redraw,vte (parser only),1.00
+1,tmux-client,alacritty_terminal,4.49
+1,tmux-client,ghostty-vt-1.2.3,3.89
+1,tmux-client,vt100,8.89
+1,tmux-client,wezterm-term,181.16
+1,tmux-client,vte (parser only),0.34
+2,plain-scroll,alacritty_terminal,19.13
+2,plain-scroll,ghostty-vt-1.2.3,12.69
+2,plain-scroll,vt100,11.67
+2,plain-scroll,wezterm-term,134.60
+2,plain-scroll,vte (parser only),1.40
+2,ansi-scroll,alacritty_terminal,16.87
+2,ansi-scroll,ghostty-vt-1.2.3,21.64
+2,ansi-scroll,vt100,6.70
+2,ansi-scroll,wezterm-term,14.99
+2,ansi-scroll,vte (parser only),1.31
+2,tui-redraw,alacritty_terminal,3.73
+2,tui-redraw,ghostty-vt-1.2.3,5.05
+2,tui-redraw,vt100,3.61
+2,tui-redraw,wezterm-term,25.29
+2,tui-redraw,vte (parser only),0.95
+2,tmux-client,alacritty_terminal,2.21
+2,tmux-client,ghostty-vt-1.2.3,3.65
+2,tmux-client,vt100,8.50
+2,tmux-client,wezterm-term,143.06
+2,tmux-client,vte (parser only),0.34
+3,plain-scroll,alacritty_terminal,13.38
+3,plain-scroll,ghostty-vt-1.2.3,9.85
+3,plain-scroll,vt100,8.41
+3,plain-scroll,wezterm-term,26.64
+3,plain-scroll,vte (parser only),0.73
+3,ansi-scroll,alacritty_terminal,12.15
+3,ansi-scroll,ghostty-vt-1.2.3,16.88
+3,ansi-scroll,vt100,6.39
+3,ansi-scroll,wezterm-term,15.13
+3,ansi-scroll,vte (parser only),1.30
+3,tui-redraw,alacritty_terminal,3.71
+3,tui-redraw,ghostty-vt-1.2.3,4.88
+3,tui-redraw,vt100,3.54
+3,tui-redraw,wezterm-term,25.43
+3,tui-redraw,vte (parser only),0.98
+3,tmux-client,alacritty_terminal,2.19
+3,tmux-client,ghostty-vt-1.2.3,3.76
+3,tmux-client,vt100,8.59
+3,tmux-client,wezterm-term,146.15
+3,tmux-client,vte (parser only),0.85
