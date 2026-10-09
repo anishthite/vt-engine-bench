@@ -3,7 +3,16 @@ name = "vt-engine-bench"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+gpui-bench = ["dep:gpui"]
+
+[[bin]]
+name = "gpui_bench"
+path = "src/bin/gpui_bench.rs"
+required-features = ["gpui-bench"]
+
 [dependencies]
+gpui = { git = "https://github.com/zed-industries/zed", rev = "cff3ac6f93f506330034652f0d2389591bfb45a0", optional = true }
 alacritty_terminal = { path = "engines/alacritty/alacritty_terminal", default-features = false }
 vt100 = { path = "engines/vt100" }
 wezterm-term = { path = "engines/wezterm/term" }

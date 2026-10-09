@@ -1,6 +1,6 @@
 # VT engine benchmark (macOS)
 
-Headless **parsing + screen-state update**, not terminal-rendering speed. Sources are pinned as git submodules (see `git submodule status` and `Cargo.lock`). Ghostty is pinned to current `main` at [`b699ea7`](https://github.com/ghostty-org/ghostty/commit/b699ea79f4b881421b4b3055abc16a0957d76beb) (1.3.2-dev). Its benchmark-only C shim is compiled against that checkout's headers and links the matching `libghostty-vt` archive; `libghostty-rs` supplies the Zig build integration, **not** its older Rust API. The other engines are pinned source checkouts. Parser-only `vte` is excluded because it has no screen state.
+Two separate measurements: **headless parsing + screen-state** and **a shared GPUI viewport observed by ScreenCaptureKit**. Sources are pinned as git submodules (see `git submodule status` and `Cargo.lock`). Ghostty is pinned to current `main` at [`b699ea7`](https://github.com/ghostty-org/ghostty/commit/b699ea79f4b881421b4b3055abc16a0957d76beb) (1.3.2-dev). Its benchmark-only C shim is compiled against that checkout's headers and links the matching `libghostty-vt` archive; `libghostty-rs` supplies the Zig build integration, **not** its older Rust API. The other engines are pinned source checkouts. Parser-only `vte` is excluded because it has no screen state.
 
 ```sh
 git submodule update --init --recursive
@@ -40,12 +40,20 @@ Only the **specific fixtures** pass; this is not a complete VT conformance suite
 
 **Do not select a GPUI terminal core on these numbers alone.** All four pass the bounded core fixtures; none is proven the fastest rendered terminal. Ghostty leads plain output and synthetic TUI redraws; Alacritty leads this recorded tmux stream and ANSI output.
 
-## GPUI display and input (not measured)
+## GPUI window capture (Apple M1 Pro, 2026-10-08)
 
-| Metric | Comparable result |
-|---|---|
-| GPUI rendering / presented frames | Not measured |
-| Frame pacing (presented-frame intervals) | Not measured |
-| Input-to-screen latency | Not measured |
+Run `bash scripts/run_gpui_bench.sh` from a logged-in macOS desktop with Screen Recording permission. It builds a **single shared GPUI text renderer** for all four engines, launches each in a visible window, and uses ScreenCaptureKit to observe a color marker changing alongside the rendered 120×40 tmux viewport. It feeds the committed tmux recording in 80 chunks at ~16 ms intervals, then dispatches 40 synthetic GPUI key events at ~40 ms intervals. The app checks that all four engines end with the same expected tmux viewport; a run is rejected if capture loses too many updates or timestamps do not align. No PTY, text attributes, cursor painting, hardware keyboard, or glyph-by-glyph screen validation is included in this rendering harness.
 
-A GPUI `on_next_frame` callback runs **before** draw/present; it cannot report any of these metrics. A local GUI prototype also failed to produce distinct active frames from this agent's shell session, so its queued callback timings were discarded. These require a working foreground window and a presentation or pixel-observation instrument; keyboard-to-pixel latency additionally needs input event timestamps. The headless figures above cannot substitute for them.
+Each figure below is the **median of three independent runs**; ms is lower-is-better. `event→pixel` times from feeding bytes (or the synthetic key handler) until ScreenCaptureKit delivers a frame containing the new marker; it includes capture delivery and is **not physical key-to-photon latency**. Capture intervals time *changed observed frames*, not GPUI's internal presentation callback; ScreenCaptureKit itself may drop frames. Do not compare these times to the headless table.
+
+| GPUI metric | Alacritty | Ghostty main | vt100 | WezTerm |
+|---|---:|---:|---:|---:|
+| Tmux observed updates / 80 | 77 | 77 | 77 | 77 |
+| Tmux event→pixel median, ms | 38.72 | 34.32 | 23.26 | 26.30 |
+| Tmux event→pixel p95, ms | 46.84 | 41.82 | 30.96 | 45.16 |
+| Tmux changed-frame interval median, ms | 17.22 | 17.39 | 17.32 | 17.26 |
+| Tmux changed-frame interval p95, ms | 19.96 | 19.24 | 19.58 | 22.46 |
+| Synthetic key→pixel median, ms | 20.54 | 18.44 | 20.72 | 20.31 |
+| Synthetic key→pixel p95, ms | 26.49 | 25.09 | 24.75 | 25.70 |
+
+[Per-run summary](results/2026-10-08-gpui-m1-pro.csv) · [Raw event timestamps, captured frames, and logs](results/2026-10-08-gpui-m1-pro/). Regenerate the summary with `python3 scripts/summarize_gpui.py --aggregate results/2026-10-08-gpui-m1-pro`. No single engine wins every meaningful metric; the synthetic key medians differ by only a few ms. These results benchmark **this common simplified renderer**, not a finished GPUI terminal or Ghostty/Alacritty's native renderer. Real tmux-with-styles and hardware input-to-photon tests remain open.
